@@ -142,14 +142,18 @@ class Messager:
                                         link = link.replace("\\","")
                                         # If we have not recorded this link before
                                         if not self.hasSentBefore(link):
-                                            # If we successfully sent the message
-                                            if self.sendMessage(link):
-                                                # Write the link to our saved file
-                                                self.writeLinkToFile(link)
-                                                # If user requests to delete the email, delete it.
-                                                if self.args.deleteEmail:
-                                                    self.deleteMessage(str(i))
-                                                    self.mail.expunge()
+                                            self.openTab(link)
+                                            if not self.checkIfPreviousMessage():
+                                                # If we successfully sent the message
+                                                if self.sendMessage():
+                                                    # Write the link to our saved file
+                                                    self.writeLinkToFile(link)
+                                                    # If user requests to delete the email, delete it.
+                                                    if self.args.deleteEmail:
+                                                        self.deleteMessage(str(i))
+                                                        self.mail.expunge()
+                                            else:
+                                                print('Previous Message Found')
                                         else:
                                             # If we have sent it before, we need to check if the user wants to delete the email
                                             if self.args.deleteEmail:
@@ -168,7 +172,34 @@ class Messager:
         except Exception as e:
             traceback.print_exc() 
             print(str(e))
+  
+    def checkIfPreviousMessage(self):
+        
+            knownSID = ['__InfiniteScrollableList-boundary',
+            '__InfiniteScrollableList-loader',
+            'indeed-application-event',
+            'indeed-initiation-event']
             
+            
+            
+            time.sleep(10)
+        
+            # Assuming we are on the message page.
+            temp = self.browser.find_elements_by_xpath('//*[@id="messaging-main-content"]/div/div[2]/div/div[2]/div/div')
+            # We are on the message page.
+            if temp:
+                childElements = temp[0].find_elements_by_xpath("./*")
+                for elements in childElements:
+                    elementSID = elements.get_attribute('data-sid')
+                    # If the found sid is not equal to any known sid,
+                    if elementSID != knownSID[0] and elementSID != knownSID[1] and elementSID != knownSID[2] and elementSID != knownSID[3]:
+                        # Found SID does not match any known SID, must be a unique message   
+                        print('Found a unique SID: ' + elementSID)
+                        return True
+                print('Did not find a unique SID')
+                return False
+        
+  
 # Writes the given link to our previously messaged companies
     def writeLinkToFile(self, link):
         file = open('sentMessage.csv', 'a')
@@ -183,10 +214,8 @@ class Messager:
         print('Deleted Email Number ' + mail)
 
 # This function opens a new tab, finds the text field, sends a generated message, and clicks send. 
-    def sendMessage(self, link):
-        # Open a new tab
-        self.openTab(link)
-        time.sleep(random.uniform(2,3) * self.sleepMulti)
+    def sendMessage(self):
+
         # Find the text input
         temp = self.browser.find_elements_by_xpath('//*[@id="messaging-main-content"]/div/div[2]/div/div[3]/div/div[1]/textarea')
         # If we have found the text input field

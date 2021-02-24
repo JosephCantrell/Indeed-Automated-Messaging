@@ -1,4 +1,3 @@
-login_page = 'https://secure.indeed.com/account/login?hl=en_US&co=US&continue=https%3A%2F%2Fwww.indeed.com%2F&tmpl=desktop&service=my&from=gnav-util-homepage' # login page 
 main_page = 'https://www.indeed.com/'
 
 username = '' # put your Indeed username here
